@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-lg">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">เพิ่มสถานที่ท่องเที่ยวใหม่</h1>
+            <a href="index.html" class="text-indigo-600">← กลับหน้าหลัก</a>
+        </div>
+        <div class="space-y-4">
+            <input id="name" type="text" placeholder="ชื่อสถานที่" class="w-full border p-3 rounded-xl focus:ring-2 ring-indigo-200 outline-none">
+            <input id="location" type="text" placeholder="ที่ตั้ง/จังหวัด" class="w-full border p-3 rounded-xl focus:ring-2 ring-indigo-200 outline-none">
+            <input id="price" type="number" placeholder="ราคา (บาท)" class="w-full border p-3 rounded-xl focus:ring-2 ring-indigo-200 outline-none">
+            <input id="img" type="text" placeholder="URL รูปภาพ (เช่น Unsplash)" class="w-full border p-3 rounded-xl focus:ring-2 ring-indigo-200 outline-none">
+            <textarea id="desc" placeholder="รายละเอียดแบบย่อ" class="w-full border p-3 rounded-xl focus:ring-2 ring-indigo-200 outline-none h-32"></textarea>
+            <button onclick="addTour()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700">บันทึกข้อมูลเข้า SQL</button>
+        </div>
+    </div>
+
+    <script>
+        async function addTour() {
+            const data = {
+                name: document.getElementById('name').value,
+                location: document.getElementById('location').value,
+                price: document.getElementById('price').value,
+                image_url: document.getElementById('img').value,
+                description: document.getElementById('desc').value
+            };
+            await fetch('/api/tours', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            alert('เพิ่มข้อมูลสำเร็จ!');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

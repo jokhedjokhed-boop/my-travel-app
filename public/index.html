@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Travel Pro | จองทริปสุดหรู</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;600&display=swap');
+        body { font-family: 'Anuphan', sans-serif; background: #f1f5f9; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .modal { background: rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <nav class="glass sticky top-0 z-50 border-b p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-600">TravelPro.</h1>
+            <div id="nav-user" class="space-x-4 flex items-center">
+                <button onclick="toggleModal('login-modal')" class="text-gray-600">เข้าสู่ระบบ</button>
+                <button onclick="toggleModal('reg-modal')" class="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-lg">สมัครสมาชิก</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="wallet-area" class="hidden container mx-auto mt-8 px-6">
+        <div class="bg-indigo-600 rounded-3xl p-8 text-white flex justify-between items-center shadow-xl">
+            <div>
+                <p class="opacity-80">ยอดเงินคงเหลือ</p>
+                <h2 id="balance-txt" class="text-4xl font-bold">฿0.00</h2>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="topUp()" class="bg-white/20 px-6 py-3 rounded-2xl font-bold hover:bg-white/30 transition">เติมเงิน 1,000</button>
+                <button onclick="showHistory()" class="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold">ประวัติการจอง</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-6 py-12">
+        <h2 class="text-3xl font-bold mb-8 text-gray-800">สำรวจสถานที่ยอดฮิต</h2>
+        <div id="tour-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+    </div>
+
+    <div id="login-modal" class="modal fixed inset-0 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6">เข้าสู่ระบบ</h2>
+            <input id="l-user" type="text" placeholder="ชื่อผู้ใช้" class="w-full border p-3 rounded-xl mb-4">
+            <input id="l-pass" type="password" placeholder="รหัสผ่าน" class="w-full border p-3 rounded-xl mb-6">
+            <button onclick="auth('login')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold">ตกลง</button>
+            <button onclick="toggleModal('login-modal')" class="w-full mt-2 text-gray-400">ยกเลิก</button>
+        </div>
+    </div>
+
+    <div id="reg-modal" class="modal fixed inset-0 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6">สมัครสมาชิก</h2>
+            <input id="r-user" type="text" placeholder="กำหนดชื่อผู้ใช้" class="w-full border p-3 rounded-xl mb-4">
+            <input id="r-pass" type="password" placeholder="กำหนดรหัสผ่าน" class="w-full border p-3 rounded-xl mb-6">
+            <button onclick="auth('register')" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold">ยืนยันการสมัคร</button>
+            <button onclick="toggleModal('reg-modal')" class="w-full mt-2 text-gray-400">ยกเลิก</button>
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal fixed inset-0 hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6">ประวัติการจองของคุณ</h2>
+            <div id="history-list" class="space-y-4"></div>
+            <button onclick="toggleModal('history-modal')" class="w-full mt-6 bg-gray-100 py-3 rounded-xl font-bold">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <script>
+        let user = JSON.parse(localStorage.getItem('user'));
+
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+
+        async function auth(type) {
+            const username = document.getElementById(type === 'login' ? 'l-user' : 'r-user').value;
+            const password = document.getElementById(type === 'login' ? 'l-pass' : 'r-pass').value;
+            
+            const res = await fetch(`/api/${type}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            
+            if(data.success) {
+                if(type === 'login') {
+                    user = data.user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    location.reload();
+                } else {
+                    alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
+                    toggleModal('reg-modal');
+                }
+            } else alert(data.message);
+        }
+
+        async function topUp() {
+            const res = await fetch('/api/topup', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userId: user.id, amount: 1000 })
+            });
+            const data = await res.json();
+            user.balance = data.newBalance;
+            localStorage.setItem('user', JSON.stringify(user));
+            updateUI();
+        }
+
+        async function book(tourId, price) {
+            if(!user) return alert('กรุณาเข้าสู่ระบบก่อนจอง!');
+            const res = await fetch('/api/book', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userId: user.id, tourId, price })
+            });
+            const data = await res.json();
+            if(data.success) {
+                user.balance = data.newBalance;
+                localStorage.setItem('user', JSON.stringify(user));
+                updateUI();
+                alert('จองทริปสำเร็จ! ตรวจสอบประวัติการจองได้เลย');
+            } else alert(data.message);
+        }
+
+        async function showHistory() {
+            const res = await fetch(`/api/history/${user.id}`);
+            const logs = await res.json();
+            document.getElementById('history-list').innerHTML = logs.map(l => `
+                <div class="flex justify-between p-4 bg-gray-50 rounded-2xl border">
+                    <div>
+                        <p class="font-bold text-gray-800">${l.tour_name}</p>
+                        <p class="text-xs text-gray-400">${new Date(l.booking_date).toLocaleString('th-TH')}</p>
+                    </div>
+                    <p class="text-red-500 font-bold">- ฿${l.amount}</p>
+                </div>
+            `).join('');
+            toggleModal('history-modal');
+        }
+
+        async function loadTours() {
+            const res = await fetch('/api/tours');
+            const tours = await res.json();
+            document.getElementById('tour-grid').innerHTML = tours.map(t => `
+                <div class="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-white">
+                    <img src="${t.image_url}" class="w-full h-56 object-cover">
+                    <div class="p-6">
+                        <p class="text-indigo-600 text-sm font-bold">📍 ${t.location}</p>
+                        <h3 class="text-xl font-bold my-2 text-gray-800">${t.name}</h3>
+                        <div class="flex justify-between items-center mt-6">
+                            <span class="text-2xl font-bold text-gray-900">฿${Number(t.price).toLocaleString()}</span>
+                            <button onclick="book(${t.id}, ${t.price})" class="bg-gray-900 text-white px-6 py-2 rounded-xl hover:bg-indigo-600 transition">จองทริป</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateUI() {
+            if(user) {
+                document.getElementById('wallet-area').classList.remove('hidden');
+                document.getElementById('balance-txt').innerText = `฿${Number(user.balance).toLocaleString()}`;
+                document.getElementById('nav-user').innerHTML = `
+                    <span class="font-bold">คุณ ${user.username}</span>
+                    ${user.role === 'admin' ? '<a href="admin.html" class="bg-yellow-400 px-4 py-1 rounded-full text-sm font-bold">ADMIN</a>' : ''}
+                    <button onclick="logout()" class="text-red-500"><i class="fas fa-sign-out-alt"></i></button>
+                `;
+            }
+            loadTours();
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+        updateUI();
+    </script>
+</body>
+</html>
