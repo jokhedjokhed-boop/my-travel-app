@@ -7,13 +7,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const db = mysql.createConnection({
+const db = mysql.createConnection(process.env.MYSQL_URL || {
     host: 'localhost',
     user: 'root',
     password: '', 
     database: 'travel_db'
 });
 
+// เพิ่มโค้ดดัก Error ไม่ให้ Server ดับ
+db.connect(err => {
+    if (err) {
+        console.error('❌ Database Connection Error:', err.message);
+    } else {
+        console.log('✅ Connected to Database');
+    }
+});
 // --- AUTH SYSTEM ---
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
