@@ -7,10 +7,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const db = mysql.createConnection(process.env.MYSQL_URL || {
+const db = mysql.createConnection(process.env.MYSQL_URL ? {
+    uri: process.env.MYSQL_URL,
+    ssl: { rejectUnauthorized: false } 
+} : {
     host: 'localhost',
     user: 'root',
-    password: '', 
+    password: '',
     database: 'travel_db'
 });
 
